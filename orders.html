@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Sweet Orders | Divine Cakes</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <img src="images/divine.jpg" alt="Divine Homemade Desserts" class="logo-img">
+                <span>DivineCakes</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="products.html">Our Cakes</a></li>
+                <li><a href="orders.html" class="active">My Orders</a></li>
+                <li><a href="thankyou.html">Thank You</a></li>
+                <li><a href="login.html">Member Login</a></li>
+                <li><a href="cart.html" class="cart-icon"><i class="fas fa-shopping-basket"></i><span class="cart-count">0</span></a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container orders-container">
+        <h1 class="section-title">Order History</h1>
+        <p style="text-align: center; font-size: 1.2rem; margin-bottom: 3rem;">Review your magical moments with us.</p>
+
+        <div id="orders-list">
+            <!-- Orders will be loaded here via JavaScript -->
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="social-links" style="margin-bottom: 2rem; font-size: 2rem; display: flex; justify-content: center; gap: 2rem;">
+                <i class="fab fa-instagram"></i>
+                <i class="fab fa-pinterest"></i>
+                <i class="fab fa-facebook"></i>
+                <i class="fab fa-twitter"></i>
+            </div>
+            <p>&copy; 2026 DivineCakes. Created with 💖 for sweet moments.</p>
+        </div>
+    </footer>
+
+    <script>
+        function checkAuth() {
+            const user = JSON.parse(localStorage.getItem('divineUser'));
+            if (!user) {
+                window.location.href = 'login.html';
+            }
+        }
+
+        function updateNav() {
+            const user = JSON.parse(localStorage.getItem('divineUser'));
+            const loginLink = document.querySelector('a[href="login.html"]');
+            if (user && loginLink) {
+                loginLink.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
+                loginLink.href = '#';
+                loginLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    localStorage.removeItem('divineUser');
+                    window.location.reload();
+                });
+            }
+        }
+
+        function loadOrders() {
+            const orders = JSON.parse(localStorage.getItem('divineOrderHistory')) || [];
+            const ordersList = document.getElementById('orders-list');
+            
+            if (orders.length === 0) {
+                ordersList.innerHTML = `
+                    <div style="text-align: center; margin: 4rem 0;">
+                        <i class="fas fa-history" style="font-size: 5rem; color: var(--secondary-color); margin-bottom: 2rem;"></i>
+                        <p style="font-size: 1.5rem; color: var(--text-color);">No sweet orders found yet!</p>
+                        <a href="products.html" class="btn btn-primary" style="margin-top: 2rem;">Start Shopping</a>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort orders by date (newest first)
+            orders.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            ordersList.innerHTML = '';
+            orders.forEach(order => {
+                const orderCard = document.createElement('div');
+                orderCard.className = 'order-card';
+                
+                let itemsHtml = '';
+                order.items.forEach(item => {
+                    itemsHtml += `
+                        <div class="order-item-row">
+                            <span>${item.name} (x${item.qty})</span>
+                            <span>₱${(item.price * item.qty).toLocaleString()}.00</span>
+                        </div>
+                    `;
+                });
+
+                orderCard.innerHTML = `
+                    <div class="order-header">
+                        <span class="order-id-badge">Order ID: ${order.id}</span>
+                        <span class="order-date">${new Date(order.date).toLocaleString()}</span>
+                    </div>
+                    <div class="order-items-list">
+                        ${itemsHtml}
+                        <div class="order-item-row" style="color: #8d6e63; font-size: 0.9rem;">
+                            <span>Shipping Fee</span>
+                            <span>₱150.00</span>
+                        </div>
+                    </div>
+                    <div class="order-footer">
+                        <span>Status: <strong style="color: #4ade80;">Success</strong></span>
+                        <span class="order-total-price">Total: ₱${order.total.toLocaleString()}.00</span>
+                    </div>
+                `;
+                ordersList.appendChild(orderCard);
+            });
+        }
+
+        function updateCartBadge() {
+            const cart = JSON.parse(localStorage.getItem('divineCart')) || [];
+            const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+            const badges = document.querySelectorAll('.cart-count');
+            badges.forEach(badge => badge.innerText = totalQty);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            loadOrders();
+            updateCartBadge();
+            updateNav();
+        });
+    </script>
+</body>
+</html>

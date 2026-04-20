@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sweet Member Login | Divine Cakes</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .login-container {
+            max-width: 450px;
+            margin: 5rem auto;
+            
+            padding: 3rem;
+            background: #fff;
+            border-radius: 2rem;
+            box-shadow: 0 10px 40px rgba(255, 133, 162, 0.1);
+            text-align: center;
+            border: 1px solid var(--light-pink);
+        }
+        .login-container h1 {
+            margin-bottom: 2rem;
+            color: var(--primary-color);
+            font-size: 2.5rem;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        .form-group input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid var(--light-pink);
+            border-radius: 50px;
+            font-size: 1rem;
+            font-family: 'Quicksand', sans-serif;
+            transition: var(--transition);
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: var(--accent-color);
+        }
+        .login-btn {
+            width: 100%;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 1rem;
+            box-shadow: 0 4px 15px rgba(255, 133, 162, 0.3);
+        }
+        .login-btn:hover {
+            background-color: #ff5c8d;
+            transform: translateY(-3px);
+        }
+        .login-links {
+            margin-top: 2rem;
+            font-size: 1rem;
+        }
+        .login-links a {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <img src="images/divine.jpg" alt="Divine Homemade Desserts" class="logo-img">
+                <span>DivineCakes</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="products.html">Our Cakes</a></li>
+                <li><a href="orders.html">My Orders</a></li>
+                <li><a href="thankyou.html">Thank You</a></li>
+                <li><a href="login.html" class="active">Member Login</a></li>
+                <li><a href="cart.html" class="cart-icon"><i class="fas fa-shopping-basket"></i><span class="cart-count">0</span></a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container" style="background: linear-gradient(rgba(253, 252, 240, 0.9), rgba(253, 252, 240, 0.9)), url('https://images.unsplash.com/photo-1557925923-33b27f891f88?q=80&w=1200&auto=format&fit=crop'); background-size: cover; background-position: center; min-height: 100vh; display: flex; align-items: center; justify-content: center; width: 100%; max-width: none;">
+        <div class="login-container">
+            <h1>Welcome Back</h1>
+            <p style="margin-bottom: 2rem; color: #8d6e63;">Login to your sweet account</p>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Sweet Email</label>
+                    <input type="email" id="email" placeholder="yourname@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+                <div id="error-message" style="color: #ff5c8d; margin-bottom: 1rem; font-weight: 600; display: none;"></div>
+                <button type="submit" class="login-btn">Sign In with Love</button>
+            </form>
+            <div class="login-links">
+                <p><a href="#">Forgot your password?</a></p>
+                <p>New here? <a href="#">Create a sweet account</a></p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 DivineCakes. Created with 💖 for sweet moments.</p>
+        </div>
+    </footer>
+    <script>
+        function updateCartBadge() {
+            const cart = JSON.parse(localStorage.getItem('divineCart')) || [];
+            const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+            const badges = document.querySelectorAll('.cart-count');
+            badges.forEach(badge => badge.innerText = totalQty);
+        }
+
+        function updateNav() {
+            const user = JSON.parse(localStorage.getItem('divineUser'));
+            const loginLink = document.querySelector('a[href="login.html"]');
+            if (user && loginLink) {
+                loginLink.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
+                loginLink.href = '#';
+                loginLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    localStorage.removeItem('divineUser');
+                    window.location.reload();
+                });
+            }
+        }
+
+        const loginForm = document.getElementById('loginForm');
+        const errorMessage = document.getElementById('error-message');
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // Simple login logic for demo: Allow any @gmail.com account
+            if (email.endsWith('@gmail.com')) {
+                localStorage.setItem('divineUser', JSON.stringify({ email: email }));
+                window.location.href = 'orders.html';
+            } else {
+                errorMessage.textContent = 'Please use a valid @gmail.com address to sign in with love!';
+                errorMessage.style.display = 'block';
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 3000);
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCartBadge();
+            updateNav();
+        });
+    </script>
+</body>
+</html>

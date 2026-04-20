@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Sweet Basket | Divine Cakes</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <img src="images/divine.jpg" alt="Divine Homemade Desserts" class="logo-img">
+                <span>DivineCakes</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="products.html">Our Cakes</a></li>
+                <li><a href="orders.html">My Orders</a></li>
+                <li><a href="thankyou.html">Thank You</a></li>
+                <li><a href="login.html">Member Login</a></li>
+                <li><a href="cart.html" class="active cart-icon"><i class="fas fa-shopping-basket"></i><span class="cart-count" id="cart-count">0</span></a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container cart-page-container">
+        <h1 class="section-title">Your Sweet Basket</h1>
+        <p style="text-align: center; font-size: 1.2rem; margin-bottom: 3rem;">Ready to bring these magical treats home?</p>
+
+        <div style="overflow-x: auto;">
+            <table class="cart-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Subtotal</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="cart-tbody">
+                    <!-- Items will be loaded here via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="cart-summary" id="cart-summary-section">
+            <h3 style="margin-bottom: 1.5rem; color: var(--primary-color);">Basket Summary</h3>
+            <div class="summary-row">
+                <span>Items Subtotal</span>
+                <span id="summary-subtotal">₱0.00</span>
+            </div>
+            <div class="summary-row">
+                <span>Shipping (Standard)</span>
+                <span id="summary-shipping">₱0.00</span>
+            </div>
+            <div class="summary-row summary-total">
+                <span>Total Amount</span>
+                <span id="summary-total">₱0.00</span>
+            </div>
+            <button class="btn btn-primary" style="width: 100%; margin-top: 2rem;" onclick="checkout()">Checkout</button>
+            <button class="btn btn-secondary" style="width: 100%; margin-top: 1rem;" onclick="clearCart()">Clear Basket</button>
+            <a href="products.html" style="display: block; text-align: center; margin-top: 1rem; font-weight: 700; color: var(--text-color);">Continue Shopping</a>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="social-links">
+                <i class="fab fa-instagram"></i>
+                <i class="fab fa-pinterest"></i>
+                <i class="fab fa-facebook"></i>
+                <i class="fab fa-twitter"></i>
+            </div>
+            <p>&copy; 2026 DivineCakes. Created with 💖 for sweet moments.</p>
+        </div>
+    </footer>
+
+    <script>
+        function showNotification(message, icon = 'fa-heart') {
+            // Remove existing notification if any
+            const existing = document.querySelector('.divine-notification');
+            if (existing) existing.remove();
+
+            const notification = document.createElement('div');
+            notification.className = 'divine-notification';
+            notification.innerHTML = `
+                <i class="fas ${icon}"></i>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(notification);
+
+            // Trigger reflow for animation
+            notification.offsetHeight;
+            notification.classList.add('show');
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 600);
+            }, 3000);
+        }
+
+        function updateNav() {
+            const user = JSON.parse(localStorage.getItem('divineUser'));
+            const loginLink = document.querySelector('a[href="login.html"]');
+            if (user && loginLink) {
+                loginLink.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
+                loginLink.href = '#';
+                loginLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    localStorage.removeItem('divineUser');
+                    window.location.reload();
+                });
+            }
+        }
+
+        function loadCart() {
+            const cart = JSON.parse(localStorage.getItem('divineCart')) || [];
+            const tbody = document.getElementById('cart-tbody');
+            const cartContainer = document.querySelector('.cart-page-container');
+            
+            if (!tbody) return; // Guard for non-cart pages if needed
+
+            tbody.innerHTML = '';
+            
+            if (cart.length === 0) {
+                cartContainer.innerHTML = `
+                    <h1 class="section-title">Your Sweet Basket is Empty</h1>
+                    <div style="text-align: center; margin: 4rem 0;">
+                        <i class="fas fa-shopping-basket" style="font-size: 5rem; color: var(--secondary-color); margin-bottom: 2rem;"></i>
+                        <p style="font-size: 1.5rem; color: var(--text-color);">Time to fill it with some magic!</p>
+                        <a href="products.html" class="btn btn-primary" style="margin-top: 2rem;">Explore Our Cakes</a>
+                    </div>
+                `;
+                updateCartBadge();
+                return;
+            }
+
+            cart.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="width: 80px; height: 80px; border-radius: 1rem; overflow: hidden;">
+                                <img src="${item.image}" alt="${item.name}" style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
+                            <span style="font-weight: 700;">${item.name}</span>
+                        </div>
+                    </td>
+                    <td>₱${item.price.toLocaleString()}.00</td>
+                    <td>
+                        <div class="qty-controls">
+                            <button class="qty-btn" onclick="updateQty(${index}, -1)">-</button>
+                            <span class="qty-val">${item.qty}</span>
+                            <button class="qty-btn" onclick="updateQty(${index}, 1)">+</button>
+                        </div>
+                    </td>
+                    <td>₱${(item.price * item.qty).toLocaleString()}.00</td>
+                    <td><i class="fas fa-trash remove-btn" onclick="removeItem(${index})"></i></td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            calculateTotals(cart);
+            updateCartBadge();
+        }
+
+        function updateQty(index, delta) {
+            let cart = JSON.parse(localStorage.getItem('divineCart')) || [];
+            cart[index].qty += delta;
+            
+            if (cart[index].qty < 1) cart[index].qty = 1;
+            
+            localStorage.setItem('divineCart', JSON.stringify(cart));
+            loadCart();
+            updateCartBadge();
+        }
+
+        function removeItem(index) {
+            let cart = JSON.parse(localStorage.getItem('divineCart')) || [];
+            const itemName = cart[index].name;
+            cart.splice(index, 1);
+            localStorage.setItem('divineCart', JSON.stringify(cart));
+            loadCart();
+            updateCartBadge();
+            showNotification(`${itemName} removed from your basket!`, 'fa-trash');
+        }
+
+        function clearCart() {
+            localStorage.removeItem('divineCart');
+            loadCart();
+            updateCartBadge();
+            showNotification('Your basket has been cleared.', 'fa-trash');
+        }
+
+        function checkout() {
+            const user = JSON.parse(localStorage.getItem('divineUser'));
+            if (!user) {
+                showNotification('Please login as a member first to place your sweet order! 💖', 'fa-lock');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+                return;
+            }
+
+            const cart = JSON.parse(localStorage.getItem('divineCart')) || [];
+            if (cart.length === 0) {
+                showNotification('Your basket is empty! 🍰', 'fa-shopping-basket');
+                return;
+            }
+
+            // Save to order history
+            const orderHistory = JSON.parse(localStorage.getItem('divineOrderHistory')) || [];
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const shipping = 150;
+            
+            const newOrder = {
+                id: '#CAKE-' + Date.now().toString().slice(-6),
+                date: new Date().toISOString(),
+                items: cart,
+                total: subtotal + shipping
+            };
+            
+            orderHistory.push(newOrder);
+            localStorage.setItem('divineOrderHistory', JSON.stringify(orderHistory));
+
+            // Clear cart upon successful checkout
+            localStorage.removeItem('divineCart');
+            showNotification('Thank you for your sweet order! 💖', 'fa-check-circle');
+            setTimeout(() => {
+                location.href = 'thankyou.html';
+            }, 2000);
+        }
+
+        function calculateTotals(cart) {
+            let subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const shipping = 150;
+            
+            const subtotalEl = document.getElementById('summary-subtotal');
+            const shippingEl = document.getElementById('summary-shipping');
+            const totalEl = document.getElementById('summary-total');
+            
+            if (subtotalEl) subtotalEl.innerText = '₱' + subtotal.toLocaleString() + '.00';
+            if (shippingEl) shippingEl.innerText = '₱' + shipping.toLocaleString() + '.00';
+            if (totalEl) totalEl.innerText = '₱' + (subtotal + shipping).toLocaleString() + '.00';
+        }
+
+        function updateCartBadge() {
+            const cart = JSON.parse(localStorage.getItem('divineCart')) || [];
+            const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+            const badges = document.querySelectorAll('.cart-count');
+            badges.forEach(badge => badge.innerText = totalQty);
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCart();
+            updateCartBadge();
+            updateNav();
+        });
+    </script>
+</body>
+</html>

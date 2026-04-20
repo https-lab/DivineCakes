@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thank You | Divine Cakes</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .thank-you-container {
+            max-width: 800px;
+            margin: 5rem auto;
+            padding: 4rem;
+            background: #fff;
+            border-radius: 2rem;
+            box-shadow: 0 10px 50px rgba(255, 133, 162, 0.15);
+            text-align: center;
+            border: 2px solid var(--light-pink);
+        }
+        .thank-you-header {
+            font-size: 3.5rem;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+        }
+        .thank-you-image {
+            width: 100%;
+            max-width: 500px;
+            height: 300px;
+            margin: 0 auto 3rem;
+            border-radius: 2rem;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(255, 133, 162, 0.1);
+        }
+        .thank-you-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .thank-you-text {
+            font-size: 1.4rem;
+            color: var(--text-color);
+            line-height: 1.8;
+            margin-bottom: 3rem;
+        }
+        .gratitude-quote {
+            font-style: italic;
+            color: #8d6e63;
+            font-size: 1.2rem;
+            margin-top: 2rem;
+            border-top: 2px dashed var(--light-pink);
+            padding-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <img src="images/divine.jpg" alt="Divine Homemade Desserts" class="logo-img">
+                <span>DivineCakes</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="products.html">Our Cakes</a></li>
+                <li><a href="orders.html">My Orders</a></li>
+                <li><a href="thankyou.html" class="active">Thank You</a></li>
+                <li><a href="login.html">Member Login</a></li>
+                <li><a href="cart.html" class="cart-icon"><i class="fas fa-shopping-basket"></i><span class="cart-count">0</span></a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="thank-you-container">
+            <h1 class="thank-you-header">With Sincere Gratitude</h1>
+            
+            <div class="thank-you-image">
+                <img src="https://images.unsplash.com/photo-1550617931-e17a7b70dce2?q=80&w=600&auto=format&fit=crop" alt="Thank You Celebration">
+            </div>
+
+            <div class="thank-you-text">
+                <p>We want to express our deepest thanks to everyone who has supported Divine Cakes. Whether you've visited our shop, shared our story, or enjoyed our sweet creations, you are part of our magical journey.</p>
+                <p>Your support inspires us to continue baking with love and creating moments of joy for every celebration. We are truly honored to be a part of your most special memories.</p>
+            </div>
+
+            <div class="gratitude-quote">
+                "Gratitude is the secret ingredient in everything we bake." <br>
+                — The DivineCakes Team 💖
+            </div>
+
+            <div style="margin-top: 3rem;">
+                <a href="index.html" class="btn btn-primary">Back to Home</a>
+                <a href="products.html" class="btn btn-secondary" style="margin-left: 1rem;">Explore Our Sweets</a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="social-links" style="margin-bottom: 2rem; font-size: 2rem; display: flex; justify-content: center; gap: 2rem;">
+                <i class="fab fa-instagram"></i>
+                <i class="fab fa-pinterest"></i>
+                <i class="fab fa-facebook"></i>
+                <i class="fab fa-twitter"></i>
+            </div>
+            <p>&copy; 2026 DivineCakes. Created with 💖 for sweet moments.</p>
+        </div>
+    </footer>
+    <script>
+        function updateCartBadge() {
+            const cart = JSON.parse(localStorage.getItem('divineCart')) || [];
+            const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+            const badges = document.querySelectorAll('.cart-count');
+            badges.forEach(badge => badge.innerText = totalQty);
+        }
+
+        function updateNav() {
+            const user = JSON.parse(localStorage.getItem('divineUser'));
+            const loginLink = document.querySelector('a[href="login.html"]');
+            if (user && loginLink) {
+                loginLink.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
+                loginLink.href = '#';
+                loginLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    localStorage.removeItem('divineUser');
+                    window.location.reload();
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCartBadge();
+            updateNav();
+        });
+    </script>
+</body>
+</html>
