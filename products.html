@@ -270,6 +270,31 @@
         </div>
     </main>
 
+    <div class="product-preview-modal" id="product-preview-modal" aria-hidden="true">
+        <div class="product-preview-content" role="dialog" aria-modal="true" aria-labelledby="preview-title">
+            <button class="preview-close-btn" type="button" onclick="closeProductPreview()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="preview-image-wrap">
+                <img id="preview-image" src="" alt="Product preview">
+            </div>
+            <div class="preview-details">
+                <h3 id="preview-title"></h3>
+                <p class="product-price" id="preview-price"></p>
+                <p id="preview-description"></p>
+                <div class="preview-qty-controls" aria-label="Select quantity">
+                    <button type="button" class="preview-qty-btn" onclick="changePreviewQty(-1)">-</button>
+                    <span id="preview-qty-value">1</span>
+                    <button type="button" class="preview-qty-btn" onclick="changePreviewQty(1)">+</button>
+                </div>
+                <div class="preview-actions">
+                    <button class="btn btn-secondary" type="button" onclick="closeProductPreview()">Back</button>
+                    <button class="btn btn-primary" id="preview-add-btn" type="button">Add to Basket</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <footer>
         <div class="container">
             <div class="social-links">
@@ -344,7 +369,7 @@
             });
         });
 
-        function goToCart(name, price, image) {
+        function goToCart(name, price, image, quantity = 1) {
             const user = JSON.parse(localStorage.getItem('divineUser'));
             if (!user) {
                 showNotification('Please login as a member first to add sweet treats to your basket! 💖', 'fa-lock');
@@ -358,25 +383,96 @@
             const existingItem = cart.find(item => item.name === name);
             
             if (existingItem) {
-                existingItem.qty += 1;
+                existingItem.qty += quantity;
             } else {
-                cart.push({ name, price, image, qty: 1 });
+                cart.push({ name, price, image, qty: quantity });
             }
             
             localStorage.setItem('divineCart', JSON.stringify(cart));
             updateCartBadge();
             
             // Subtle feedback
-            const btn = event.target;
-            const originalText = btn.innerText;
-            btn.innerText = 'Added! 💖';
-            btn.style.backgroundColor = '#4ade80';
-            setTimeout(() => {
-                btn.innerText = originalText;
-                btn.style.backgroundColor = 'var(--primary-color)';
-            }, 1500);
+            const btn = typeof event !== 'undefined' ? event.target : null;
+            if (btn) {
+                const originalText = btn.innerText;
+                btn.innerText = 'Added! 💖';
+                btn.style.backgroundColor = '#4ade80';
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.style.backgroundColor = 'var(--primary-color)';
+                }, 1500);
+            }
 
             showNotification(`${name} added to your basket! 🍰`);
+        }
+
+        function openProductPreview(name, price, image, description) {
+            const modal = document.getElementById('product-preview-modal');
+            const titleEl = document.getElementById('preview-title');
+            const priceEl = document.getElementById('preview-price');
+            const imageEl = document.getElementById('preview-image');
+            const descriptionEl = document.getElementById('preview-description');
+            const addBtn = document.getElementById('preview-add-btn');
+            if (!modal || !titleEl || !priceEl || !imageEl || !descriptionEl || !addBtn) return;
+
+            titleEl.textContent = name;
+            priceEl.textContent = `₱${price.toLocaleString()}.00`;
+            imageEl.src = image;
+            imageEl.alt = `${name} preview`;
+            descriptionEl.textContent = description;
+            document.getElementById('preview-qty-value').textContent = '1';
+
+            addBtn.onclick = () => {
+                goToCart(name, price, image, getPreviewQty());
+                closeProductPreview();
+            };
+
+            modal.classList.add('open');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeProductPreview() {
+            const modal = document.getElementById('product-preview-modal');
+            if (!modal) return;
+            modal.classList.remove('open');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        }
+
+        function getPreviewQty() {
+            const qtyEl = document.getElementById('preview-qty-value');
+            if (!qtyEl) return 1;
+            const parsedQty = Number.parseInt(qtyEl.textContent, 10);
+            return Number.isNaN(parsedQty) || parsedQty < 1 ? 1 : parsedQty;
+        }
+
+        function changePreviewQty(delta) {
+            const qtyEl = document.getElementById('preview-qty-value');
+            if (!qtyEl) return;
+            const currentQty = getPreviewQty();
+            const nextQty = Math.max(1, currentQty + delta);
+            qtyEl.textContent = String(nextQty);
+        }
+
+        function bindProductImagePreviews() {
+            document.querySelectorAll('.product-card').forEach(card => {
+                const imageWrap = card.querySelector('.product-img');
+                const productName = card.querySelector('h3')?.textContent?.trim();
+                const priceText = card.querySelector('.product-price')?.textContent?.trim() || '';
+                const numericPriceText = priceText.replace(/[^0-9.,]/g, '').replace(/,/g, '');
+                const productPrice = Number.parseFloat(numericPriceText);
+                const productImage = card.querySelector('.product-img img')?.getAttribute('src');
+                const productDescription = card.querySelector('.product-info p:not(.product-price)')?.textContent?.trim() || '';
+
+                if (!imageWrap || !productName || Number.isNaN(productPrice) || !productImage) return;
+
+                imageWrap.style.cursor = 'pointer';
+                imageWrap.setAttribute('title', `Preview ${productName}`);
+                imageWrap.addEventListener('click', () => {
+                    openProductPreview(productName, productPrice, productImage, productDescription);
+                });
+            });
         }
 
         function updateCartBadge() {
@@ -387,8 +483,20 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            bindProductImagePreviews();
             updateCartBadge();
             updateNav();
+
+            const modal = document.getElementById('product-preview-modal');
+            if (modal) {
+                modal.addEventListener('click', (event) => {
+                    if (event.target === modal) closeProductPreview();
+                });
+            }
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') closeProductPreview();
+            });
         });
     </script>
 </body>
